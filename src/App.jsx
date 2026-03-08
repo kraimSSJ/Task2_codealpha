@@ -3,27 +3,35 @@ import { useState, useEffect, useCallback, useRef } from "react";
 /* ═══════════════════════════════════════════════════════════
    PERSISTENT STORAGE HELPERS  (shared = visible to all users)
 ═══════════════════════════════════════════════════════════ */
+import { supabase } from './supabase';
+
 const DB = {
   async getUsers() {
-    try { const r = await window.storage.get("db:users", true); return r ? JSON.parse(r.value) : []; } catch { return []; }
+    const { data } = await supabase.from('profiles').select('*');
+    return data || [];
   },
   async setUsers(users) {
-    try { await window.storage.set("db:users", JSON.stringify(users), true); } catch {}
+    // In a real app, Supabase Auth handles this, 
+    // but for your task, this will upsert the profile data.
+    await supabase.from('profiles').upsert(users);
   },
   async getPosts() {
-    try { const r = await window.storage.get("db:posts", true); return r ? JSON.parse(r.value) : []; } catch { return []; }
+    const { data } = await supabase.from('posts').select('*').order('ts', { ascending: false });
+    return data || [];
   },
   async setPosts(posts) {
-    try { await window.storage.set("db:posts", JSON.stringify(posts), true); } catch {}
+    // This will sync your local post state to the live table
+    await supabase.from('posts').upsert(posts);
   },
   async getSession() {
-    try { const r = await window.storage.get("db:session"); return r ? JSON.parse(r.value) : null; } catch { return null; }
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.user?.id || null;
   },
   async setSession(userId) {
-    try { await window.storage.set("db:session", JSON.stringify(userId)); } catch {}
+    // Logic for setting a session if using manual mock auth
   },
   async clearSession() {
-    try { await window.storage.delete("db:session"); } catch {}
+    await supabase.auth.signOut();
   },
 };
 
