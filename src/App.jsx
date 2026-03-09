@@ -13,7 +13,16 @@ const DB = {
       return data || [];
     } catch (e) {
       console.error("Supabase Error (Users):", e.message);
-      return []; // Return empty instead of crashing
+      return []; 
+    }
+  },
+  async setUsers(users) {
+    try {
+      // This is the 'setUsers' function the error was looking for
+      const { error } = await supabase.from('profiles').upsert(users);
+      if (error) throw error;
+    } catch (e) {
+      console.error("Supabase Error (setUsers):", e.message);
     }
   },
   async getPosts() {
@@ -22,8 +31,17 @@ const DB = {
       if (error) throw error;
       return data || [];
     } catch (e) {
-      console.error("Supabase Error (Posts):", e.message);
-      return []; // Return empty instead of crashing
+      console.error("Supabase Error (getPosts):", e.message);
+      return [];
+    }
+  },
+  async setPosts(posts) {
+    try {
+      // This is the function that actually saves your posts to the cloud
+      const { error } = await supabase.from('posts').upsert(posts);
+      if (error) throw error;
+    } catch (e) {
+      console.error("Supabase Error (setPosts):", e.message);
     }
   },
   async getSession() {
@@ -34,8 +52,13 @@ const DB = {
       return null;
     }
   },
-  // ... keep your other functions, but wrap them in try/catch like above
+  async clearSession() {
+    await supabase.auth.signOut();
+  }
 };
+
+// DON'T FORGET THIS LINE AT THE VERY BOTTOM
+export default DB;
 let _nextId = Date.now();
 const uid = () => String(++_nextId);
 
