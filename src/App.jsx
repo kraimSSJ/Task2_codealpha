@@ -1,52 +1,31 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-
-/* ═══════════════════════════════════════════════════════════
-   PERSISTENT STORAGE HELPERS  (shared = visible to all users)
-═══════════════════════════════════════════════════════════ */
 import { supabase } from './supabase';
 
+/* ═══════════════════════════════════════════════════════════
+   PERSISTENT STORAGE HELPERS
+═══════════════════════════════════════════════════════════ */
 const DB = {
   async getUsers() {
     const { data, error } = await supabase.from('profiles').select('*');
-    console.log('getUsers → data:', data, '| error:', error);
-    if (error) return [];
+    if (error) { console.error('getUsers error:', error); return []; }
     return data || [];
   },
-
-  async setUsers(users) {
-    if (!users || users.length === 0) return;
-    const { data, error } = await supabase.from('profiles').upsert(users, { onConflict: 'id' });
-    console.log('setUsers → data:', data, '| error:', error);
-  },
-
   async getPosts() {
     const { data, error } = await supabase.from('posts').select('*').order('ts', { ascending: false });
-    console.log('getPosts → data:', data, '| error:', error);
-    if (error) return [];
+    if (error) { console.error('getPosts error:', error); return []; }
     return data || [];
   },
-
-  async setPosts(posts) {
-    if (!posts || posts.length === 0) return;
-    const { data, error } = await supabase.from('posts').upsert(posts, { onConflict: 'id' });
-    console.log('setPosts → data:', data, '| error:', error);
-  },
-
   async getSession() {
-    const uid = localStorage.getItem('thread_uid');
-    console.log('getSession → uid:', uid);
-    return uid;
+    return localStorage.getItem('thread_uid');
   },
-
   async setSession(userId) {
-    console.log('setSession → saving uid:', userId);
     localStorage.setItem('thread_uid', userId);
   },
-
   async clearSession() {
     localStorage.removeItem('thread_uid');
   },
 };
+
 let _nextId = Date.now();
 const uid = () => String(++_nextId);
 
@@ -76,7 +55,6 @@ const CSS = `
 
 body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 
-/* ── layout ── */
 .app{display:flex;min-height:100vh}
 .sidebar{
   width:248px;min-height:100vh;background:var(--s1);border-right:1px solid var(--b);
@@ -86,14 +64,12 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 .main{margin-left:248px;flex:1}
 .center{max-width:600px;margin:0 auto;padding:36px 20px}
 
-/* ── brand ── */
 .brand{
   font-family:var(--fd);font-size:20px;font-weight:800;color:var(--acc);
   padding:4px 10px 22px;letter-spacing:-.5px;display:flex;align-items:center;gap:6px
 }
 .brand-dot{width:8px;height:8px;background:var(--acc);border-radius:50%;display:inline-block}
 
-/* ── nav ── */
 .nav{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r2);
   border:none;background:none;color:var(--t2);cursor:pointer;
   font-family:var(--fb);font-size:14px;font-weight:500;width:100%;transition:all .15s}
@@ -110,7 +86,6 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 .me-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .me-handle{font-size:11px;color:var(--t3)}
 
-/* ── auth screen ── */
 .auth-bg{
   min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
   background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(249,115,22,.08),transparent)
@@ -147,10 +122,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 .btn-primary:hover{opacity:.88}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed}
 .auth-err{color:var(--red);font-size:13px;margin-top:12px;text-align:center}
-.auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--t2)}
-.auth-switch button{background:none;border:none;color:var(--acc);cursor:pointer;font-size:13px;font-family:var(--fb)}
 
-/* ── avatar ── */
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;
   font-family:var(--fd);font-weight:700;color:white;flex-shrink:0}
 .av-xs{width:28px;height:28px;font-size:10px}
@@ -159,12 +131,10 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 .av-lg{width:72px;height:72px;font-size:22px}
 .av-xl{width:96px;height:96px;font-size:28px;border:3px solid var(--b)}
 
-/* ── page header ── */
 .ph{margin-bottom:28px}
 .ph h1{font-family:var(--fd);font-size:26px;font-weight:800}
 .ph p{color:var(--t2);font-size:13px;margin-top:3px}
 
-/* ── compose ── */
 .compose{
   background:var(--s1);border:1px solid var(--b);border-radius:var(--r);
   padding:18px;margin-bottom:20px;transition:border-color .2s
@@ -182,11 +152,9 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 .char-count.warn{color:var(--acc)}
 .char-count.over{color:var(--red)}
 
-/* ── post card ── */
 .post{
   background:var(--s1);border:1px solid var(--b);border-radius:var(--r);
-  margin-bottom:14px;overflow:hidden;
-  animation:fadeUp .3s ease both
+  margin-bottom:14px;overflow:hidden;animation:fadeUp .3s ease both
 }
 .post:hover{border-color:var(--b2)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -206,7 +174,6 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 .act.liked{color:var(--red)}
 .act.liked:hover{background:rgba(239,68,68,.1)}
 
-/* ── comments ── */
 .cmts{border-top:1px solid var(--b)}
 .cmts-list{padding:4px 18px 0}
 .cmt{display:flex;gap:9px;padding:11px 0;border-bottom:1px solid var(--b)}
@@ -229,7 +196,6 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 }
 .btn-send:hover{background:var(--acc);color:white}
 
-/* ── follow btn ── */
 .btn-follow{
   padding:8px 18px;border-radius:var(--r2);font-family:var(--fb);
   font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid
@@ -241,7 +207,6 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 .btn-follow.edit{background:none;color:var(--t);border-color:var(--b)}
 .btn-follow.edit:hover{border-color:var(--b2)}
 
-/* ── profile page ── */
 .prof-card{background:var(--s1);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;margin-bottom:22px}
 .prof-banner{height:110px}
 .prof-body{padding:0 22px 22px}
@@ -253,7 +218,6 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 .pstat{font-size:13px;color:var(--t2)}
 .pstat strong{color:var(--t);font-family:var(--fd);font-weight:700;font-size:15px}
 
-/* ── people cards ── */
 .person{
   background:var(--s1);border:1px solid var(--b);border-radius:var(--r);
   padding:18px;display:flex;gap:14px;align-items:flex-start;
@@ -265,7 +229,6 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 .p-handle{color:var(--t3);font-size:12px;margin-bottom:4px}
 .p-bio{font-size:13px;color:var(--t2);line-height:1.5}
 
-/* ── tabs ── */
 .tabs{display:flex;border-bottom:1px solid var(--b);margin-bottom:18px}
 .tab{
   padding:11px 18px;border:none;background:none;cursor:pointer;
@@ -274,7 +237,6 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 }
 .tab.on{color:var(--acc);border-bottom-color:var(--acc)}
 
-/* ── modal ── */
 .overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000;
   display:flex;align-items:center;justify-content:center;padding:20px;
@@ -295,12 +257,10 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 .btn-x{background:none;border:none;color:var(--t2);cursor:pointer;padding:5px;border-radius:7px;display:flex}
 .btn-x:hover{color:var(--t);background:var(--s2)}
 
-/* ── edit profile modal ── */
 .edit-form{padding:22px}
 .edit-field{margin-bottom:18px}
 .edit-field label{display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
 
-/* ── toast ── */
 .toast{
   position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
   background:var(--s2);border:1px solid var(--b);color:var(--t);
@@ -310,7 +270,6 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 }
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-/* ── misc ── */
 .divider{height:1px;background:var(--b);margin:6px 0}
 .empty{text-align:center;padding:56px 20px;color:var(--t3)}
 .empty h3{font-family:var(--fd);font-size:17px;color:var(--t2);margin-bottom:5px}
@@ -321,13 +280,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
   border-radius:50%;animation:spin .7s linear infinite;margin-right:10px
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-.badge{
-  display:inline-flex;align-items:center;justify-content:center;
-  min-width:18px;height:18px;border-radius:9px;background:var(--acc);
-  color:white;font-size:11px;font-weight:700;padding:0 5px
-}
 
-/* ── scrollbar ── */
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}
 `;
@@ -401,7 +354,7 @@ export default function App() {
     })();
   }, []);
 
-  // ── live polling (every 5s) so multiple users see each other's activity ──
+  // ── live polling every 5s ──
   useEffect(() => {
     if (!currentUid) return;
     pollRef.current = setInterval(async () => {
@@ -413,28 +366,28 @@ export default function App() {
 
   const me = users.find(u => u.id === currentUid);
 
-  // ── write helpers ──
-  const saveUsers = async (next) => { setUsers(next); await DB.setUsers(next); };
-  const savePosts = async (next) => { setPosts(next); await DB.setPosts(next); };
-
+  // ── auth ──
   const register = async ({ name, username, bio, color }) => {
     const fresh = await DB.getUsers();
     if (fresh.find(u => u.username.toLowerCase() === username.toLowerCase()))
       return "Username already taken";
-    const user = { id: uid(), name, username: username.toLowerCase(), bio, color,
-      avatar: name.slice(0,2).toUpperCase(), followers: [], following: [], joined: new Date().toLocaleDateString("en-US",{month:"short",year:"numeric"}) };
-    const next = [...fresh, user];
-    await saveUsers(next);
+    const user = {
+      id: uid(), name, username: username.toLowerCase(), bio, color,
+      avatar: name.slice(0,2).toUpperCase(), followers: [], following: [],
+      joined: new Date().toLocaleDateString("en-US", { month:"short", year:"numeric" })
+    };
+    const { error } = await supabase.from('profiles').insert(user);
+    if (error) { console.error('register error:', error); return "Failed to create account"; }
+    setUsers([...fresh, user]);
     await DB.setSession(user.id);
     setCurrentUid(user.id);
     return null;
   };
 
-  const login = async ({ username, password }) => {
+  const login = async ({ username }) => {
     const fresh = await DB.getUsers();
     const user = fresh.find(u => u.username.toLowerCase() === username.toLowerCase());
     if (!user) return "User not found";
-    if (user.password && user.password !== password) return "Wrong password";
     setUsers(fresh);
     await DB.setSession(user.id);
     setCurrentUid(user.id);
@@ -442,57 +395,76 @@ export default function App() {
   };
 
   const logout = async () => {
-    await DB.clearSession(); setCurrentUid(null); setPage("feed");
+    await DB.clearSession();
+    setCurrentUid(null);
+    setPage("feed");
   };
 
-  const toggleLike = async (postId) => {
-    const next = posts.map(p => {
-      if (p.id !== postId) return p;
-      const liked = p.likes.includes(currentUid);
-      return { ...p, likes: liked ? p.likes.filter(id => id !== currentUid) : [...p.likes, currentUid] };
-    });
-    await savePosts(next);
-  };
-
-  const addComment = async (postId, text) => {
-    if (!text.trim()) return;
-    const next = posts.map(p => {
-      if (p.id !== postId) return p;
-      return { ...p, comments: [...p.comments, { id: uid(), userId: currentUid, text, ts: Date.now() }] };
-    });
-    await savePosts(next);
-  };
-
+  // ── posts ──
   const addPost = async (content) => {
     if (!content.trim()) return;
     const np = { id: uid(), userId: currentUid, content: content.trim(), likes: [], comments: [], ts: Date.now() };
-    await savePosts([np, ...posts]);
+    const { error } = await supabase.from('posts').insert(np);
+    if (error) { console.error('addPost error:', error); showToast("Failed to post"); return; }
+    setPosts(prev => [np, ...prev]);
     showToast("✓ Post published");
   };
 
   const deletePost = async (postId) => {
-    await savePosts(posts.filter(p => p.id !== postId));
+    const { error } = await supabase.from('posts').delete().eq('id', postId);
+    if (error) { console.error('deletePost error:', error); return; }
+    setPosts(prev => prev.filter(p => p.id !== postId));
     showToast("Post deleted");
   };
 
+  const toggleLike = async (postId) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const liked = post.likes.includes(currentUid);
+    const newLikes = liked ? post.likes.filter(id => id !== currentUid) : [...post.likes, currentUid];
+    const { error } = await supabase.from('posts').update({ likes: newLikes }).eq('id', postId);
+    if (error) { console.error('toggleLike error:', error); return; }
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: newLikes } : p));
+  };
+
+  const addComment = async (postId, text) => {
+    if (!text.trim()) return;
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const newComments = [...post.comments, { id: uid(), userId: currentUid, text, ts: Date.now() }];
+    const { error } = await supabase.from('posts').update({ comments: newComments }).eq('id', postId);
+    if (error) { console.error('addComment error:', error); return; }
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments: newComments } : p));
+  };
+
+  // ── users ──
   const toggleFollow = async (targetId) => {
     if (targetId === currentUid) return;
     const isFollowing = me.following.includes(targetId);
-    const next = users.map(u => {
-      if (u.id === currentUid) return { ...u, following: isFollowing ? u.following.filter(x => x !== targetId) : [...u.following, targetId] };
-      if (u.id === targetId) return { ...u, followers: isFollowing ? u.followers.filter(x => x !== currentUid) : [...u.followers, currentUid] };
-      return u;
-    });
-    await saveUsers(next);
     const target = users.find(u => u.id === targetId);
-    showToast(isFollowing ? "Unfollowed" : `Following @${target?.username}`);
+    if (!target) return;
+    const newMeFollowing = isFollowing ? me.following.filter(x => x !== targetId) : [...me.following, targetId];
+    const newTargetFollowers = isFollowing ? target.followers.filter(x => x !== currentUid) : [...target.followers, currentUid];
+    await supabase.from('profiles').update({ following: newMeFollowing }).eq('id', currentUid);
+    await supabase.from('profiles').update({ followers: newTargetFollowers }).eq('id', targetId);
+    setUsers(prev => prev.map(u => {
+      if (u.id === currentUid) return { ...u, following: newMeFollowing };
+      if (u.id === targetId) return { ...u, followers: newTargetFollowers };
+      return u;
+    }));
+    showToast(isFollowing ? "Unfollowed" : `Following @${target.username}`);
   };
 
   const updateProfile = async ({ name, bio, color }) => {
-    const next = users.map(u => u.id === currentUid
-      ? { ...u, name: name||u.name, bio: bio||u.bio, color: color||u.color, avatar: (name||u.name).slice(0,2).toUpperCase() }
-      : u);
-    await saveUsers(next);
+    const updates = {
+      name: name || me.name,
+      bio: bio || me.bio,
+      color: color || me.color,
+      avatar: (name || me.name).slice(0,2).toUpperCase()
+    };
+    const { error } = await supabase.from('profiles').update(updates).eq('id', currentUid);
+    if (error) { console.error('updateProfile error:', error); return; }
+    setUsers(prev => prev.map(u => u.id === currentUid ? { ...u, ...updates } : u));
     setEditModal(false);
     showToast("✓ Profile updated");
   };
@@ -514,7 +486,12 @@ export default function App() {
 
   if (!me) return (
     <><style>{CSS}</style>
-      <div className="loading">Session expired. <button onClick={logout} style={{marginLeft:8,background:"none",border:"none",color:"var(--acc)",cursor:"pointer",fontFamily:"var(--fb)"}}>Sign in again</button></div>
+      <div className="loading">
+        Session expired.
+        <button onClick={logout} style={{marginLeft:8,background:"none",border:"none",color:"var(--acc)",cursor:"pointer",fontFamily:"var(--fb)"}}>
+          Sign in again
+        </button>
+      </div>
     </>
   );
 
@@ -523,7 +500,6 @@ export default function App() {
   return (
     <><style>{CSS}</style>
       <div className="app">
-        {/* SIDEBAR */}
         <aside className="sidebar">
           <div className="brand"><span className="brand-dot"/>thread.</div>
           <button className={`nav ${page==="feed"?"on":""}`} onClick={() => setPage("feed")}>{Ic.home} Feed</button>
@@ -542,7 +518,6 @@ export default function App() {
           </div>
         </aside>
 
-        {/* CONTENT */}
         <main className="main">
           {page==="feed" && (
             <FeedPage posts={feedPosts} me={me} getUser={getUser}
@@ -550,13 +525,13 @@ export default function App() {
               onDelete={deletePost} onProfile={openProfile} onOpen={setPostModal} />
           )}
           {page==="people" && (
-            <PeoplePage users={users.filter(u=>u.id!==currentUid)} me={me}
+            <PeoplePage users={users.filter(u => u.id !== currentUid)} me={me}
               onFollow={toggleFollow} onProfile={openProfile} />
           )}
           {page==="profile" && profileId && (
             <ProfilePage
-              user={getUser(profileId)||me}
-              posts={feedPosts.filter(p=>p.userId===profileId)}
+              user={getUser(profileId) || me}
+              posts={feedPosts.filter(p => p.userId === profileId)}
               me={me} getUser={getUser}
               onFollow={toggleFollow} onLike={toggleLike}
               onComment={addComment} onDelete={deletePost}
@@ -566,10 +541,8 @@ export default function App() {
         </main>
       </div>
 
-      {/* EDIT PROFILE MODAL */}
       {editModal && <EditProfileModal user={me} onSave={updateProfile} onClose={() => setEditModal(false)} />}
 
-      {/* POST DETAIL MODAL */}
       {postModal && (() => {
         const p = posts.find(x => x.id === postModal) || null;
         if (!p) return null;
@@ -588,7 +561,7 @@ export default function App() {
 ═══════════════════════════════════════════════════════════ */
 function AuthScreen({ onRegister, onLogin }) {
   const [tab, setTab] = useState("register");
-  const [form, setForm] = useState({ name:"", username:"", bio:"", password:"", color: AVATAR_COLORS[0] });
+  const [form, setForm] = useState({ name:"", username:"", bio:"", color: AVATAR_COLORS[0] });
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -606,7 +579,7 @@ function AuthScreen({ onRegister, onLogin }) {
   const handleLogin = async () => {
     if (!form.username.trim()) return setErr("Username is required");
     setBusy(true); setErr("");
-    const e = await onLogin({ username: form.username, password: form.password });
+    const e = await onLogin({ username: form.username });
     if (e) { setErr(e); setBusy(false); }
   };
 
@@ -668,8 +641,6 @@ function FeedPage({ posts, me, getUser, onPost, onLike, onComment, onDelete, onP
   return (
     <div className="center">
       <div className="ph"><h1>Feed</h1><p>What's happening right now</p></div>
-
-      {/* Compose */}
       <div className="compose">
         <div className="compose-row">
           <Av user={me} size="sm"/>
@@ -684,7 +655,6 @@ function FeedPage({ posts, me, getUser, onPost, onLike, onComment, onDelete, onP
             disabled={!draft.trim()||over} onClick={()=>{onPost(draft);setDraft("")}}>Post</button>
         </div>
       </div>
-
       {posts.length === 0 && <div className="empty"><h3>No posts yet</h3><p>Be the first to share something!</p></div>}
       {posts.map(p => (
         <PostCard key={p.id} post={p} author={getUser(p.userId)} me={me}
@@ -704,7 +674,7 @@ function PostCard({ post, author, me, onLike, onComment, onDelete, onProfile, on
   const liked = post.likes.includes(me.id);
   const isOwn = post.userId === me.id;
 
-  const submit = () => { if(!cmt.trim()) return; onComment(post.id,cmt); setCmt(""); };
+  const submit = () => { if(!cmt.trim()) return; onComment(post.id, cmt); setCmt(""); };
 
   if (!author) return null;
 
@@ -764,20 +734,20 @@ function PostModal({ post, me, getUser, onClose, onLike, onComment, onProfile })
   const [cmt, setCmt] = useState("");
   const author = getUser(post.userId);
   const liked = post.likes.includes(me.id);
-  const submit = () => { if(!cmt.trim()) return; onComment(post.id,cmt); setCmt(""); };
+  const submit = () => { if(!cmt.trim()) return; onComment(post.id, cmt); setCmt(""); };
   if (!author) return null;
   return (
     <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal">
         <div className="modal-head">Post <button className="btn-x" onClick={onClose}>{Ic.x}</button></div>
-        <div className="post-head" style={{padding:"16px 22px 12px",cursor:"pointer"}} onClick={()=>{onProfile(author.id)}}>
+        <div className="post-head" style={{padding:"16px 22px 12px",cursor:"pointer"}} onClick={() => onProfile(author.id)}>
           <Av user={author} size="sm"/>
           <div><div className="post-name">{author.name}</div><div className="post-handle">@{author.username}</div></div>
           <div className="post-time">{timeAgo(post.ts)}</div>
         </div>
         <div className="post-body" style={{padding:"0 22px 16px"}}>{post.content}</div>
         <div className="post-foot" style={{padding:"10px 22px 14px"}}>
-          <button className={`act ${liked?"liked":""}`} onClick={()=>onLike(post.id)}>
+          <button className={`act ${liked?"liked":""}`} onClick={() => onLike(post.id)}>
             {Ic.heart(liked)}{post.likes.length>0&&<span>{post.likes.length}</span>}
           </button>
           <span className="act" style={{pointerEvents:"none"}}>{Ic.comment}<span>{post.comments.length}</span></span>
@@ -786,7 +756,7 @@ function PostModal({ post, me, getUser, onClose, onLike, onComment, onProfile })
           {post.comments.length>0 && (
             <div className="cmts-list">
               {post.comments.map(c=>{
-                const cu=getUser(c.userId); if(!cu) return null;
+                const cu = getUser(c.userId); if(!cu) return null;
                 return (
                   <div key={c.id} className="cmt">
                     <Av user={cu} size="xs"/>
