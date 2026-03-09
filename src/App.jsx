@@ -64,6 +64,33 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);min-height:100vh}
 .main{margin-left:248px;flex:1}
 .center{max-width:600px;margin:0 auto;padding:36px 20px}
 
+.bottom-nav{display:none}
+
+@media(max-width:680px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .center{padding:16px 12px 90px}
+  .bottom-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:100;
+    background:var(--s1);border-top:1px solid var(--b);
+    padding:6px 0 calc(6px + env(safe-area-inset-bottom))
+  }
+  .bottom-nav button{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:none;border:none;color:var(--t2);cursor:pointer;
+    font-family:var(--fb);font-size:10px;font-weight:500;padding:6px 0;transition:color .15s
+  }
+  .bottom-nav button.on{color:var(--acc)}
+  .bottom-nav button svg{width:22px;height:22px}
+  .ph h1{font-size:20px}
+  .prof-banner{height:80px}
+  .prof-stats{gap:12px}
+  .compose{padding:14px}
+  .post-body{font-size:14px}
+  .modal{max-height:92vh;border-bottom-left-radius:0;border-bottom-right-radius:0;margin-top:auto}
+  .overlay{align-items:flex-end;padding:0}
+}
+
 .brand{
   font-family:var(--fd);font-size:20px;font-weight:800;color:var(--acc);
   padding:4px 10px 22px;letter-spacing:-.5px;display:flex;align-items:center;gap:6px
@@ -539,6 +566,21 @@ export default function App() {
               onEdit={() => setEditModal(true)} />
           )}
         </main>
+
+        <nav className="bottom-nav">
+          <button className={page==="feed"?"on":""} onClick={() => setPage("feed")}>
+            {Ic.home}<span>Feed</span>
+          </button>
+          <button className={page==="people"?"on":""} onClick={() => setPage("people")}>
+            {Ic.users}<span>People</span>
+          </button>
+          <button className={page==="profile"&&profileId===currentUid?"on":""} onClick={() => { setProfileId(currentUid); setPage("profile"); }}>
+            {Ic.user}<span>Profile</span>
+          </button>
+          <button onClick={logout}>
+            {Ic.logout}<span>Sign out</span>
+          </button>
+        </nav>
       </div>
 
       {editModal && <EditProfileModal user={me} onSave={updateProfile} onClose={() => setEditModal(false)} />}
