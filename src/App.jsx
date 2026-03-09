@@ -7,58 +7,34 @@ import { supabase } from './supabase';
 
 const DB = {
   async getUsers() {
-    try {
-      const { data, error } = await supabase.from('profiles').select('*');
-      if (error) throw error;
-      return data || [];
-    } catch (e) {
-      console.error("Supabase Error (Users):", e.message);
-      return []; 
-    }
+    const { data } = await supabase.from('profiles').select('*');
+    return data || [];
   },
   async setUsers(users) {
-    try {
-      // This is the 'setUsers' function the error was looking for
-      const { error } = await supabase.from('profiles').upsert(users);
-      if (error) throw error;
-    } catch (e) {
-      console.error("Supabase Error (setUsers):", e.message);
-    }
+    // In a real app, Supabase Auth handles this, 
+    // but for your task, this will upsert the profile data.
+    await supabase.from('profiles').upsert(users);
   },
   async getPosts() {
-    try {
-      const { data, error } = await supabase.from('posts').select('*').order('ts', { ascending: false });
-      if (error) throw error;
-      return data || [];
-    } catch (e) {
-      console.error("Supabase Error (getPosts):", e.message);
-      return [];
-    }
+    const { data } = await supabase.from('posts').select('*').order('ts', { ascending: false });
+    return data || [];
   },
   async setPosts(posts) {
-    try {
-      // This is the function that actually saves your posts to the cloud
-      const { error } = await supabase.from('posts').upsert(posts);
-      if (error) throw error;
-    } catch (e) {
-      console.error("Supabase Error (setPosts):", e.message);
-    }
+    // This will sync your local post state to the live table
+    await supabase.from('posts').upsert(posts);
   },
   async getSession() {
-    try {
-      const { data } = await supabase.auth.getSession();
-      return data?.session?.user?.id || null;
-    } catch {
-      return null;
-    }
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.user?.id || null;
+  },
+  async setSession(userId) {
+    // Logic for setting a session if using manual mock auth
   },
   async clearSession() {
     await supabase.auth.signOut();
-  }
+  },
 };
 
-// DON'T FORGET THIS LINE AT THE VERY BOTTOM
-export default DB;
 let _nextId = Date.now();
 const uid = () => String(++_nextId);
 
