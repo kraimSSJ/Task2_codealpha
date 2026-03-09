@@ -403,7 +403,7 @@ export default function App() {
   // ── posts ──
   const addPost = async (content) => {
     if (!content.trim()) return;
-    const np = { id: uid(), userId: currentUid, content: content.trim(), likes: [], comments: [], ts: Date.now() };
+    const np = { id: uid(), user_id: currentUid, content: content.trim(), likes: [], comments: [], ts: Date.now() };
     const { error } = await supabase.from('posts').insert(np);
     if (error) { console.error('addPost error:', error); showToast("Failed to post"); return; }
     setPosts(prev => [np, ...prev]);
@@ -531,7 +531,7 @@ export default function App() {
           {page==="profile" && profileId && (
             <ProfilePage
               user={getUser(profileId) || me}
-              posts={feedPosts.filter(p => p.userId === profileId)}
+              posts={feedPosts.filter(p => p.user_id === profileId)}
               me={me} getUser={getUser}
               onFollow={toggleFollow} onLike={toggleLike}
               onComment={addComment} onDelete={deletePost}
@@ -657,7 +657,7 @@ function FeedPage({ posts, me, getUser, onPost, onLike, onComment, onDelete, onP
       </div>
       {posts.length === 0 && <div className="empty"><h3>No posts yet</h3><p>Be the first to share something!</p></div>}
       {posts.map(p => (
-        <PostCard key={p.id} post={p} author={getUser(p.userId)} me={me}
+        <PostCard key={p.id} post={p} author={getUser(p.user_id)} me={me}
           onLike={onLike} onComment={onComment} onDelete={onDelete}
           onProfile={onProfile} onOpen={onOpen} getUser={getUser} />
       ))}
@@ -672,7 +672,7 @@ function PostCard({ post, author, me, onLike, onComment, onDelete, onProfile, on
   const [open, setOpen] = useState(false);
   const [cmt, setCmt] = useState("");
   const liked = post.likes.includes(me.id);
-  const isOwn = post.userId === me.id;
+  const isOwn = post.user_id === me.id;
 
   const submit = () => { if(!cmt.trim()) return; onComment(post.id, cmt); setCmt(""); };
 
@@ -732,7 +732,7 @@ function PostCard({ post, author, me, onLike, onComment, onDelete, onProfile, on
 ═══════════════════════════════════════════════════════════ */
 function PostModal({ post, me, getUser, onClose, onLike, onComment, onProfile }) {
   const [cmt, setCmt] = useState("");
-  const author = getUser(post.userId);
+  const author = getUser(post.user_id);
   const liked = post.likes.includes(me.id);
   const submit = () => { if(!cmt.trim()) return; onComment(post.id, cmt); setCmt(""); };
   if (!author) return null;
@@ -868,7 +868,7 @@ function ProfilePage({ user, posts, me, getUser, onFollow, onLike, onComment, on
       {tab==="liked" && (
         likedPosts.length===0
           ? <div className="empty"><h3>No liked posts yet</h3></div>
-          : likedPosts.map(p => <PostCard key={p.id} post={p} author={getUser(p.userId)} me={me}
+          : likedPosts.map(p => <PostCard key={p.id} post={p} author={getUser(p.user_id)} me={me}
               onLike={onLike} onComment={onComment} onDelete={onDelete}
               onProfile={onProfile} onOpen={onOpen} getUser={getUser} />)
       )}
