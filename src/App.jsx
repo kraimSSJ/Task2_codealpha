@@ -7,34 +7,41 @@ import { supabase } from './supabase';
 
 const DB = {
   async getUsers() {
-    const { data } = await supabase.from('profiles').select('*');
+    const { data, error } = await supabase.from('profiles').select('*');
+    if (error) { console.error('getUsers error:', error); return []; }
     return data || [];
   },
+
   async setUsers(users) {
-    // In a real app, Supabase Auth handles this, 
-    // but for your task, this will upsert the profile data.
-    await supabase.from('profiles').upsert(users);
+    if (!users || users.length === 0) return;
+    const { error } = await supabase.from('profiles').upsert(users, { onConflict: 'id' });
+    if (error) console.error('setUsers error:', error);
   },
+
   async getPosts() {
-    const { data } = await supabase.from('posts').select('*').order('ts', { ascending: false });
+    const { data, error } = await supabase.from('posts').select('*').order('ts', { ascending: false });
+    if (error) { console.error('getPosts error:', error); return []; }
     return data || [];
   },
+
   async setPosts(posts) {
-    // This will sync your local post state to the live table
-    await supabase.from('posts').upsert(posts);
+    if (!posts || posts.length === 0) return;
+    const { error } = await supabase.from('posts').upsert(posts, { onConflict: 'id' });
+    if (error) console.error('setPosts error:', error);
   },
+
   async getSession() {
-    const { data } = await supabase.auth.getSession();
-    return data?.session?.user?.id || null;
+    return localStorage.getItem('thread_uid');
   },
+
   async setSession(userId) {
-    // Logic for setting a session if using manual mock auth
+    localStorage.setItem('thread_uid', userId);
   },
+
   async clearSession() {
-    await supabase.auth.signOut();
+    localStorage.removeItem('thread_uid');
   },
 };
-
 let _nextId = Date.now();
 const uid = () => String(++_nextId);
 
