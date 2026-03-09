@@ -8,33 +8,38 @@ import { supabase } from './supabase';
 const DB = {
   async getUsers() {
     const { data, error } = await supabase.from('profiles').select('*');
-    if (error) { console.error('getUsers error:', error); return []; }
+    console.log('getUsers → data:', data, '| error:', error);
+    if (error) return [];
     return data || [];
   },
 
   async setUsers(users) {
     if (!users || users.length === 0) return;
-    const { error } = await supabase.from('profiles').upsert(users, { onConflict: 'id' });
-    if (error) console.error('setUsers error:', error);
+    const { data, error } = await supabase.from('profiles').upsert(users, { onConflict: 'id' });
+    console.log('setUsers → data:', data, '| error:', error);
   },
 
   async getPosts() {
     const { data, error } = await supabase.from('posts').select('*').order('ts', { ascending: false });
-    if (error) { console.error('getPosts error:', error); return []; }
+    console.log('getPosts → data:', data, '| error:', error);
+    if (error) return [];
     return data || [];
   },
 
   async setPosts(posts) {
     if (!posts || posts.length === 0) return;
-    const { error } = await supabase.from('posts').upsert(posts, { onConflict: 'id' });
-    if (error) console.error('setPosts error:', error);
+    const { data, error } = await supabase.from('posts').upsert(posts, { onConflict: 'id' });
+    console.log('setPosts → data:', data, '| error:', error);
   },
 
   async getSession() {
-    return localStorage.getItem('thread_uid');
+    const uid = localStorage.getItem('thread_uid');
+    console.log('getSession → uid:', uid);
+    return uid;
   },
 
   async setSession(userId) {
+    console.log('setSession → saving uid:', userId);
     localStorage.setItem('thread_uid', userId);
   },
 
