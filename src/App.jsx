@@ -7,34 +7,35 @@ import { supabase } from './supabase';
 
 const DB = {
   async getUsers() {
-    const { data } = await supabase.from('profiles').select('*');
-    return data || [];
-  },
-  async setUsers(users) {
-    // In a real app, Supabase Auth handles this, 
-    // but for your task, this will upsert the profile data.
-    await supabase.from('profiles').upsert(users);
+    try {
+      const { data, error } = await supabase.from('profiles').select('*');
+      if (error) throw error;
+      return data || [];
+    } catch (e) {
+      console.error("Supabase Error (Users):", e.message);
+      return []; // Return empty instead of crashing
+    }
   },
   async getPosts() {
-    const { data } = await supabase.from('posts').select('*').order('ts', { ascending: false });
-    return data || [];
-  },
-  async setPosts(posts) {
-    // This will sync your local post state to the live table
-    await supabase.from('posts').upsert(posts);
+    try {
+      const { data, error } = await supabase.from('posts').select('*').order('ts', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    } catch (e) {
+      console.error("Supabase Error (Posts):", e.message);
+      return []; // Return empty instead of crashing
+    }
   },
   async getSession() {
-    const { data } = await supabase.auth.getSession();
-    return data?.session?.user?.id || null;
+    try {
+      const { data } = await supabase.auth.getSession();
+      return data?.session?.user?.id || null;
+    } catch {
+      return null;
+    }
   },
-  async setSession(userId) {
-    // Logic for setting a session if using manual mock auth
-  },
-  async clearSession() {
-    await supabase.auth.signOut();
-  },
+  // ... keep your other functions, but wrap them in try/catch like above
 };
-
 let _nextId = Date.now();
 const uid = () => String(++_nextId);
 
